@@ -1,0 +1,15 @@
+{
+  "name": "lab5",
+  "version": "1.0.0",
+  "description": "",
+  "main": "parse-to-proto.js",
+  "scripts": {
+    "start": "node .",
+    "test": "npx jasmine spec/test.js"
+  },
+  "author": "strenman",
+  "license": "ISC",
+  "devDependencies": {
+    "jasmine": "^5.4.0"
+  }
+}
