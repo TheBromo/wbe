@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Vier gewinnt</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="connect4-winner.js"> </script>
+  <script>
+
+    /*
+     *  This solution sould be considered as a proof of concept – the code 
+     *  definitely needs some cleanup and documentation
+     */
+
+    let state = {
+      board: [
+        ['', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '']
+      ],
+      next: 'b'
+    }
+
+    const SERVICE = "http://localhost:3000/api/data/c4state?api-key=c4game"
+
+
+    //  Initialize game
+    //
+    function initGame() {
+      let board = showBoard()
+      attachEventHandler(board)
+    }
+
+
+    //  Show board
+    // 
+    function showBoard() {
+
+      let board = document.querySelector(".board")
+
+
+      // first remove all fields
+      while (board.firstChild) {board.removeChild(board.firstChild)}
+      let fields = []
+
+      for (const [y, row] of state.board.entries()) {
+        for (const [column, field] of row.entries()) {
+          let type = undefined
+          let coordinates = {"data-x": column, "data-y": y}
+
+          switch (field) {
+            case 'b':
+              type = elt("div", {class: "blue piece", ...coordinates})
+              break;
+            case 'r':
+              type = elt("div", {class: "red piece", ...coordinates})
+            default:
+              break;
+          }
+          let f = undefined
+
+          if (type) {
+            f = elt("div", {class: "field", ...coordinates}, ...[type])
+          } else {
+            f = elt("div", {class: "field", ...coordinates})
+          }
+
+          fields.push(f)
+        }
+      }
+      board.innerHTML = ''
+      for (field of fields) {
+        board.appendChild(field);
+      }
+
+      return board
+    }
+
+
+    //  Helper function for DOM manipulation
+    // 
+    function elt(type, attrs, ...children) {
+      let node = document.createElement(type)
+      Object.keys(attrs).forEach(key => {
+        node.setAttribute(key, attrs[key])
+      })
+      for (let child of children) {
+        if (typeof child != "string") node.appendChild(child)
+        else node.appendChild(document.createTextNode(child))
+      }
+
+      return node
+    }
+
+
+    var pState = [];
+
+    function placeInColumn(columnIndex, symbol) {
+
+      if (columnIndex < 0 || columnIndex >= state.board[0].length) {
+        console.error("column index out of range")
+        return
+      }
+
+      let heigth = state.board.length - 1
+      while (heigth >= 0 && state.board[heigth][columnIndex] !== '') {
+        heigth--
+      }
+
+      if (heigth < 0) {
+        console.error("no free field found in column")
+        return
+      }
+
+      let json = JSON.stringify(state)
+      pState.push(json)
+      state.board[heigth][columnIndex] = symbol
+
+
+      if (state.next === 'b') {
+        state.next = 'r'
+      } else {
+        state.next = 'b'
+      }
+    }
+
+
+
+
+    //  Attach event handler to board
+    //
+    function attachEventHandler(board) {
+      board.addEventListener("click", (e) => {
+        let field = e.target
+        let x = field.getAttribute("data-x")
+        let y = field.getAttribute("data-y")
+        console.log(`x:${x} y:${y} `)
+        let previous = state.next
+        placeInColumn(x, state.next)
+        showBoard()
+        if (connect4Winner(previous, state.board)) {
+          window.alert(`Player: ${previous} won!!!!`)
+        }
+
+      })
+    }
+
+
+    //  Get current state from local state and re-draw board
+    //
+    function loadState() {
+      json = localStorage.getItem("save")
+      state = JSON.parse(json)
+      showBoard()
+      //fetch(SERVICE)
+      //  .then(response => response.json())
+      //  .then(data => {
+      //    state = data
+      //    showBoard()
+      //})
+    }
+
+    function clearBoard() {
+      state = {
+        board: [
+          ['', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '']
+        ],
+        next: 'b'
+      };
+      showBoard()
+    }
+
+    //  Put current state to server
+    //
+    function saveState() {
+      let json = JSON.stringify(state)
+      localStorage.setItem("save", json)
+      //fetch(SERVICE, {
+      //  method: 'PUT',
+      //  headers: {'Content-type': 'application/json'},
+      //  body: json
+      //})
+    }
+    function revert() {
+      console.log(pState)
+      if (pState.length > 0) {
+        state = JSON.parse(pState.pop())
+        showBoard()
+      }
+    }
+
+  </script>
+
+</head>
+
+<body>
+
+  <div class="board"></div>
+
+  <div class="controls">
+    <button onclick="loadState()">Load</button>
+    <button onclick="saveState()">Save</button>
+    <button onclick="clearBoard()">Clear</button>
+    <button onclick="revert()">revert</button>
+  </div>
+
+
+  <script>
+    initGame()
+  </script>
+
+</body>
+
+</html>
