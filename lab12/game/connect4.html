@@ -92,8 +92,12 @@
         if (typeof child != "string") node.appendChild(child)
         else node.appendChild(document.createTextNode(child))
       }
+
       return node
     }
+
+
+    var pState = [];
 
     function placeInColumn(columnIndex, symbol) {
 
@@ -112,8 +116,10 @@
         return
       }
 
-
+      let json = JSON.stringify(state)
+      pState.push(json)
       state.board[heigth][columnIndex] = symbol
+
 
       if (state.next === 'b') {
         state.next = 'r'
@@ -158,8 +164,7 @@
       //})
     }
 
-    function clear() {
-      console.log('clearing')
+    function clearBoard() {
       state = {
         board: [
           ['', '', '', '', '', '', ''],
@@ -185,6 +190,13 @@
       //  body: json
       //})
     }
+    function revert() {
+      console.log(pState)
+      if (pState.length > 0) {
+        state = JSON.parse(pState.pop())
+        showBoard()
+      }
+    }
 
   </script>
 
@@ -197,7 +209,8 @@
   <div class="controls">
     <button onclick="loadState()">Load</button>
     <button onclick="saveState()">Save</button>
-    <button onclick="clear()">Clear</button>
+    <button onclick="clearBoard()">Clear</button>
+    <button onclick="revert()">revert</button>
   </div>
 
 

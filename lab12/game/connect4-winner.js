@@ -39,4 +39,3 @@ function checkDirection(element, board, xOrigin, yOrigin, xDir, yDir) {
   }
   return true
 }
-module.exports = { connect4Winner }
